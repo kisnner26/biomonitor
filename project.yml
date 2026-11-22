@@ -11,6 +11,8 @@ targets:
     platform: watchOS
     sources:
       - Biomonitor
+    dependencies:
+      - target: BiomonitorWidgets
     entitlements:
       path: Biomonitor/Biomonitor.entitlements
       properties:
@@ -36,6 +38,37 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_STYLE: Automatic
+  BiomonitorWidgets:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - BiomonitorWidgets
+      - Biomonitor/Model/Vitals.swift
+      - Biomonitor/Model/Lang.swift
+      - Biomonitor/Model/ECGEngine.swift
+      - Biomonitor/Views/Pixel.swift
+    entitlements:
+      path: BiomonitorWidgets/BiomonitorWidgets.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+    info:
+      path: BiomonitorWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Biomonitor
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSHealthShareUsageDescription: "Biomonitor lee tu pulso y pasos para mostrarlos en la complicacion."
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kisnner26.biomonitor.widgets
+        SWIFT_VERSION: "5.0"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_STYLE: Automatic
+        SKIP_INSTALL: YES
 schemes:
   Biomonitor:
     build:
