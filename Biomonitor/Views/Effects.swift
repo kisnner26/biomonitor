@@ -237,6 +237,8 @@ struct CrownHint: View {
                     .font(.monitor(15, weight: .semibold))
                     .foregroundStyle(palette.text)
                     .multilineTextAlignment(.center)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 14)
                 Text(tr(.hintDismiss, lang))
                     .font(.monitor(11, weight: .medium))
