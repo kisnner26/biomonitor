@@ -11,6 +11,8 @@ final class ECGEngine {
     private var phase = 0.0
     private var accumulator = 0.0
     private var lastDate: Date?
+    /// momento del ultimo pico R; las animaciones se sincronizan con el
+    private(set) var lastBeat: Date?
     private var seed: UInt64 = 0x9E3779B97F4A7C15
 
     init() { buffer = Array(repeating: nil, count: columns) }
@@ -48,8 +50,9 @@ final class ECGEngine {
     private func push(bpm: Int?, step: Double) {
         if let bpm {
             buffer[cursor] = Self.wave(phase) + noise() * 0.5
-            phase += step * Double(bpm) / 60
-            phase -= phase.rounded(.down)
+            let raw = phase + step * Double(bpm) / 60
+            if (raw - 0.37).rounded(.down) > (phase - 0.37).rounded(.down) { lastBeat = lastDate }
+            phase = raw - raw.rounded(.down)
         } else {
             buffer[cursor] = noise()   // sin señal: linea plana
         }

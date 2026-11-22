@@ -75,24 +75,3 @@ struct ZoneBars: View {
         }
     }
 }
-
-/// linea punteada horizontal o vertical
-struct DottedLine: View {
-    let color: Color
-    var vertical = false
-
-    var body: some View {
-        Canvas { ctx, size in
-            var p = Path()
-            if vertical {
-                p.move(to: CGPoint(x: size.width / 2, y: 0))
-                p.addLine(to: CGPoint(x: size.width / 2, y: size.height))
-            } else {
-                p.move(to: CGPoint(x: 0, y: size.height / 2))
-                p.addLine(to: CGPoint(x: size.width, y: size.height / 2))
-            }
-            ctx.stroke(p, with: .color(color), style: StrokeStyle(lineWidth: 1.4, dash: [1.4, 2.2]))
-        }
-        .frame(width: vertical ? 2 : nil, height: vertical ? nil : 2)
-    }
-}

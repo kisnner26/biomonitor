@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// trazo de ecg que barre la pantalla
+/// trazo de ecg que barre la pantalla, con estela de fosforo: lo viejo se apaga poco a poco
 struct ECGTraceView: View {
     let engine: ECGEngine
     let bpm: Int?
@@ -16,23 +16,32 @@ struct ECGTraceView: View {
                 let amp = size.height * 0.58
                 let n = engine.columns
                 let dx = size.width / CGFloat(n - 1)
+                func pt(_ i: Int, _ v: Double) -> CGPoint { CGPoint(x: CGFloat(i) * dx, y: base - CGFloat(v) * amp) }
 
-                var path = Path()
-                var pen = false
-                for i in 0..<n {
-                    guard !engine.isGap(i), let v = engine.buffer[i] else { pen = false; continue }
-                    let pt = CGPoint(x: CGFloat(i) * dx, y: base - CGFloat(v) * amp)
-                    if pen { path.addLine(to: pt) } else { path.move(to: pt); pen = true }
+                var glow = Path()
+                var segs: [(Path, Double)] = []
+                for i in 0..<(n - 1) {
+                    guard !engine.isGap(i), !engine.isGap(i + 1), let a = engine.buffer[i], let b = engine.buffer[i + 1] else { continue }
+                    var seg = Path()
+                    seg.move(to: pt(i, a))
+                    seg.addLine(to: pt(i + 1, b))
+                    glow.addPath(seg)
+                    let age = Double((engine.cursor - 1 - i + n) % n) / Double(n)
+                    segs.append((seg, paused ? 0.85 : 0.22 + 0.78 * pow(1 - age, 1.8)))
                 }
-                var glow = gc
-                glow.addFilter(.blur(radius: 3))
-                glow.stroke(path, with: .color(color.opacity(0.7)), style: StrokeStyle(lineWidth: lineWidth + 1.5, lineCap: .round, lineJoin: .round))
-                gc.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
+                var g = gc
+                g.addFilter(.blur(radius: 3.2))
+                g.stroke(glow, with: .color(color.opacity(paused ? 0.35 : 0.5)), style: StrokeStyle(lineWidth: lineWidth + 1.6, lineCap: .round, lineJoin: .round))
+                for (seg, a) in segs {
+                    gc.stroke(seg, with: .color(color.opacity(a)), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                }
 
-                // punto brillante en la cabeza del trazo
                 let head = (engine.cursor - 1 + n) % n
                 if !paused, let v = engine.buffer[head] {
-                    let c = CGPoint(x: CGFloat(head) * dx, y: base - CGFloat(v) * amp)
+                    let c = pt(head, v)
+                    var h = gc
+                    h.addFilter(.blur(radius: 2))
+                    h.fill(Path(ellipseIn: CGRect(x: c.x - 4, y: c.y - 4, width: 8, height: 8)), with: .color(color))
                     gc.fill(Path(ellipseIn: CGRect(x: c.x - 2.2, y: c.y - 2.2, width: 4.4, height: 4.4)), with: .color(.white))
                 }
             }
@@ -44,33 +53,43 @@ struct ECGTraceView: View {
 struct TrendView: View {
     let history: [HRPoint]
     let color: Color
+    @State private var progress = 0.0
 
     var body: some View {
-        Canvas { gc, size in
-            guard history.count > 1 else {
-                var flat = Path()
-                flat.move(to: CGPoint(x: 0, y: size.height * 0.7))
-                flat.addLine(to: CGPoint(x: size.width, y: size.height * 0.7))
-                gc.stroke(flat, with: .color(color), lineWidth: 1.8)
-                return
-            }
-            let vals = history.map(\.bpm)
-            let lo = Double(min(vals.min()! , 60) - 5)
-            let hi = Double(max(vals.max()!, 100) + 5)
-            let n = history.count
-            func y(_ v: Int) -> CGFloat { size.height - CGFloat((Double(v) - lo) / (hi - lo)) * size.height * 0.9 - size.height * 0.05 }
-            func x(_ i: Int) -> CGFloat { CGFloat(i) / CGFloat(n - 1) * size.width }
+        TrendShape(history: history, progress: progress)
+            .stroke(color, style: StrokeStyle(lineWidth: 1.8, lineJoin: .miter))
+            .shadow(color: color.opacity(0.8), radius: 4)
+            .onAppear { withAnimation(.easeOut(duration: 0.9)) { progress = 1 } }
+            .onDisappear { progress = 0 }
+    }
+}
 
-            var p = Path()
-            p.move(to: CGPoint(x: 0, y: y(vals[0])))
-            for i in 1..<n {
-                p.addLine(to: CGPoint(x: x(i), y: y(vals[i - 1])))   // horizontal
-                p.addLine(to: CGPoint(x: x(i), y: y(vals[i])))       // escalon
-            }
-            var glow = gc
-            glow.addFilter(.blur(radius: 3))
-            glow.stroke(p, with: .color(color.opacity(0.7)), lineWidth: 3)
-            gc.stroke(p, with: .color(color), style: StrokeStyle(lineWidth: 1.8, lineJoin: .miter))
+struct TrendShape: Shape {
+    var history: [HRPoint]
+    var progress: Double
+    var animatableData: Double {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        let vals = history.map(\.bpm)
+        guard vals.count > 1 else {
+            p.move(to: CGPoint(x: r.minX, y: r.height * 0.7))
+            p.addLine(to: CGPoint(x: r.minX + r.width * progress, y: r.height * 0.7))
+            return p
         }
+        let lo = Double(min(vals.min()!, 60) - 5)
+        let hi = Double(max(vals.max()!, 100) + 5)
+        let n = vals.count
+        func y(_ v: Int) -> CGFloat { r.maxY - CGFloat((Double(v) - lo) / (hi - lo)) * r.height * 0.9 - r.height * 0.05 }
+        func x(_ i: Int) -> CGFloat { r.minX + CGFloat(i) / CGFloat(n - 1) * r.width * progress }
+        p.move(to: CGPoint(x: x(0), y: y(vals[0])))
+        for i in 1..<n {
+            p.addLine(to: CGPoint(x: x(i), y: y(vals[i - 1])))
+            p.addLine(to: CGPoint(x: x(i), y: y(vals[i])))
+        }
+        return p
     }
 }

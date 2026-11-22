@@ -71,7 +71,10 @@ enum PaletteID: String, CaseIterable, Identifiable {
 }
 
 /// dos looks: el reloj de la escena de la caja (verde) y el de la pantalla del genoma (cian y azul).
+enum Layout { case box, bars }
+
 struct Palette {
+    var layout: Layout
     var text: Color
     var dim: Color
     var trace: Color
@@ -79,6 +82,7 @@ struct Palette {
     var accent: Color
 
     static let fitbit = Palette(
+        layout: .box,
         text: Color(red: 0.88, green: 0.93, blue: 1.0),
         dim: Color(red: 0.45, green: 0.52, blue: 0.62),
         trace: Color(red: 0.18, green: 0.84, blue: 0.27),
@@ -86,6 +90,7 @@ struct Palette {
         accent: Color(red: 0.90, green: 0.14, blue: 0.16))
 
     static let codex = Palette(
+        layout: .bars,
         text: Color(red: 0.72, green: 0.97, blue: 0.93),
         dim: Color(red: 0.25, green: 0.50, blue: 0.55),
         trace: Color(red: 0.26, green: 0.93, blue: 0.80),
