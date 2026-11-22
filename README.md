@@ -4,7 +4,7 @@
 
 Monitor de pulso para Apple Watch inspirado en el reloj que usa Ethan Winters en *Resident Evil 7*. Muestra el pulso en vivo, un trazo de ECG que barre la pantalla y los datos del día con la misma estética: marco punteado, tipografía condensada e iconos de píxeles.
 
-<p align="center"><img src="docs/pantallas.png" alt="Monitor, carátula, condición, actividad y ajustes en un Apple Watch Ultra 2" width="100%"></p>
+<p align="center"><img src="docs/pantallas-v2.png" alt="Monitor, carátula, condición, actividad y ajustes en un Apple Watch Ultra 2" width="100%"></p>
 
 ## Funciones
 
