@@ -33,12 +33,12 @@ enum Condition {
         }
     }
 
-    var label: String {
+    func label(_ lang: Lang) -> String {
         switch self {
-        case .fine: "FINE"
-        case .caution: "CAUTION"
-        case .danger: "DANGER"
-        case .noSignal: "NO SIGNAL"
+        case .fine: tr(.fine, lang)
+        case .caution: tr(.caution, lang)
+        case .danger: tr(.danger, lang)
+        case .noSignal: tr(.noSignal, lang)
         }
     }
 
@@ -66,7 +66,7 @@ func heartZone(_ bpm: Int?) -> Int {
 enum PaletteID: String, CaseIterable, Identifiable {
     case fitbit, codex
     var id: String { rawValue }
-    var title: String { self == .fitbit ? "VERDE" : "CIAN" }
+    func title(_ lang: Lang) -> String { tr(self == .fitbit ? .green : .cyan, lang) }
     var palette: Palette { self == .fitbit ? .fitbit : .codex }
 }
 

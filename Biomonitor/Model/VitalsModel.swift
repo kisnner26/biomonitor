@@ -1,6 +1,5 @@
 import Foundation
 import HealthKit
-import WatchKit
 
 /// lee el pulso en vivo (con una sesion de entrenamiento temporal que no se guarda) y los datos del dia.
 final class VitalsModel: NSObject, ObservableObject {
@@ -13,8 +12,6 @@ final class VitalsModel: NSObject, ObservableObject {
     private var builder: HKLiveWorkoutBuilder?
     private var authorized = false
     private var wantLive = true
-    private var haptic = false
-    private var beatToken = 0
 
     private let bpmUnit = HKUnit.count().unitDivided(by: .minute())
     private let hrType = HKQuantityType(.heartRate)
@@ -26,14 +23,12 @@ final class VitalsModel: NSObject, ObservableObject {
 
     // MARK: ciclo de vida
 
-    func start(live: Bool, haptic: Bool) {
+    func start(live: Bool) {
         wantLive = live
-        self.haptic = haptic
         guard healthAvailable else { return }
         if authorized {
             refresh()
             if live { startLive() }
-            scheduleBeat()
             return
         }
         store.requestAuthorization(toShare: [HKObjectType.workoutType()], read: readTypes) { [weak self] ok, _ in
@@ -42,7 +37,6 @@ final class VitalsModel: NSObject, ObservableObject {
                 self.authorized = true
                 self.refresh()
                 if self.wantLive { self.startLive() }
-                self.scheduleBeat()
             }
         }
     }
@@ -53,20 +47,10 @@ final class VitalsModel: NSObject, ObservableObject {
         if on { startLive() } else { stopLive() }
     }
 
-    func setHaptic(_ on: Bool) {
-        haptic = on
-        scheduleBeat()
-    }
-
-    func pause() {
-        beatToken += 1   // corta el latido tactil mientras la pantalla esta apagada
-    }
-
     func resume() {
         guard authorized else { return }
         refresh()
         if wantLive { startLive() }
-        scheduleBeat()
     }
 
     // MARK: pulso en vivo
@@ -170,39 +154,6 @@ final class VitalsModel: NSObject, ObservableObject {
             var s = self.snapshot
             change(&s)
             self.snapshot = s
-        }
-    }
-
-    // MARK: latido tactil (lub-dub)
-
-    private func scheduleBeat() {
-        beatToken += 1
-        guard haptic, let bpm = snapshot.bpm, bpm > 0 else {
-            if haptic { retryBeat() }
-            return
-        }
-        beat(token: beatToken)
-    }
-
-    private func retryBeat() {
-        let token = beatToken
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
-            guard let self, token == self.beatToken else { return }
-            self.scheduleBeat()
-        }
-    }
-
-    private func beat(token: Int) {
-        guard token == beatToken, haptic, let bpm = snapshot.bpm, bpm > 0 else { return }
-        let device = WKInterfaceDevice.current()
-        device.play(.click)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.16) { [weak self] in
-            guard let self, token == self.beatToken else { return }
-            device.play(.click)
-        }
-        let period = 60.0 / Double(bpm)
-        DispatchQueue.main.asyncAfter(deadline: .now() + period) { [weak self] in
-            self?.beat(token: token)
         }
     }
 }
