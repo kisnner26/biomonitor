@@ -1,4 +1,6 @@
-# Biomonitor
+<p align="center"><img src="docs/icono.png" alt="Icono de Biomonitor" width="128"></p>
+
+<h1 align="center">Biomonitor</h1>
 
 Monitor de pulso para Apple Watch inspirado en el reloj que usa Ethan Winters en *Resident Evil 7*. Muestra el pulso en vivo, un trazo de ECG que barre la pantalla y los datos del día con la misma estética: marco punteado, tipografía condensada e iconos de píxeles.
 
@@ -7,10 +9,14 @@ Monitor de pulso para Apple Watch inspirado en el reloj que usa Ethan Winters en
 ## Funciones
 
 - **Monitor.** Fecha y hora, trazo de ECG en marco punteado, pulso con barras de zona y pasos. Tocar la gráfica alterna entre el ECG y el historial de pulso en escalones.
-- **Condition.** Estado FINE, CAUTION o DANGER según el pulso, con mínimo, promedio, máximo y pulso en reposo del día.
+- **Condition.** Estado FINE, CAUTION o DANGER (BIEN, PRECAUCIÓN, PELIGRO en español) según el pulso, con mínimo, promedio, máximo y pulso en reposo del día.
 - **Actividad.** Pasos, distancia y energía activa con barras segmentadas hacia una meta.
 - **Ajustes.** Paleta verde (marco punteado) o cian (barras azules como la pantalla del genoma), pulso en vivo, latido táctil (lub-dub) y reloj de 24 h.
 - **Animaciones.** Secuencia de arranque, marco que se dibuja solo, corazón que late con el pico R del ECG, estela de fósforo en el trazo, líneas de barrido tipo CRT, interferencia al cambiar de página y marco de estado que late más rápido en CAUTION y DANGER, con háptico al cambiar de estado.
+- **Navegación propia.** Desliza a los lados o gira la corona; la barra superior muestra la página y cuatro segmentos, sin los puntos del sistema.
+- **Idioma.** Español e inglés, elegible en Ajustes (por defecto el del sistema).
+- **Sonido.** Tonos sintetizados al vuelo (arranque, páginas, alertas de estado y bip opcional con cada latido), sin archivos de audio.
+- **Detalles de la saga.** Emblema de Umbrella en el arranque y recomendación de objeto según el estado: hierba verde en CAUTION, botiquín en DANGER.
 - **Siempre activa.** Con la pantalla atenuada el trazo se congela y baja el brillo.
 
 ## Cómo funciona
@@ -40,14 +46,14 @@ El script genera el proyecto, compila en Release, firma con tu equipo e instala 
 
 ```
 Biomonitor/
-  Model/   Vitals (datos, estados, paletas), ECGEngine (trazo), VitalsModel (HealthKit)
-  Views/   MonitorView, StatusViews, ChartViews, Pixel, SettingsView
+  Model/   Vitals (datos, estados, paletas), ECGEngine (trazo), VitalsModel (HealthKit), Lang (idiomas), SoundFX (audio)
+  Views/   MonitorView, StatusViews, ChartViews, Effects, NavBar, Pixel, SettingsView
 scripts/
   install-watch.sh   compila, firma e instala en el reloj
   make-icon.py       genera el icono de 1024 px
 ```
 
-El icono muestra el emblema rojo y blanco de Umbrella con un pulso verde en el centro.
+El icono (`docs/icono.png`, generado con `scripts/make-icon.py`) muestra el emblema rojo y blanco de Umbrella con un pulso verde en el centro.
 
 ## Aviso
 
