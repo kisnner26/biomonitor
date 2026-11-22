@@ -1,5 +1,6 @@
 import Foundation
 import HealthKit
+import WidgetKit
 
 /// lee el pulso en vivo (con una sesion de entrenamiento temporal que no se guarda) y los datos del dia.
 final class VitalsModel: NSObject, ObservableObject {
@@ -11,6 +12,7 @@ final class VitalsModel: NSObject, ObservableObject {
     private var session: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
     private var authorized = false
+    private var lastReload = Date.distantPast
     private var wantLive = true
 
     private let bpmUnit = HKUnit.count().unitDivided(by: .minute())
@@ -92,6 +94,11 @@ final class VitalsModel: NSObject, ObservableObject {
             s.history.append(HRPoint(date: Date(), bpm: bpm))
             if s.history.count > 90 { s.history.removeFirst(s.history.count - 90) }
             self.snapshot = s
+            // la complicacion se actualiza como mucho cada 5 minutos
+            if Date().timeIntervalSince(self.lastReload) > 300 {
+                self.lastReload = Date()
+                WidgetCenter.shared.reloadAllTimelines()
+            }
         }
     }
 

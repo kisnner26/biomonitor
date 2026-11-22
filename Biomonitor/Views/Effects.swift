@@ -168,3 +168,83 @@ struct BeatHeart: View {
         }
     }
 }
+
+/// rotulo breve con el nombre de la pagina al cambiar; se apaga solo
+struct PageToast: View {
+    let text: String
+    let color: Color
+    let visible: Bool
+
+    var body: some View {
+        Text("[ \(text) ]")
+            .font(.monitor(13, weight: .bold))
+            .foregroundStyle(color)
+            .shadow(color: color.opacity(0.8), radius: 4)
+            .padding(.horizontal, 8).padding(.vertical, 2)
+            .background(Color.black.opacity(0.75))
+            .opacity(visible ? 1 : 0)
+            .scaleEffect(visible ? 1 : 0.9)
+            .animation(.easeOut(duration: 0.2), value: visible)
+            .allowsHitTesting(false)
+    }
+}
+
+/// guia de la primera vez: la corona digital cambia de pantalla
+struct CrownHint: View {
+    let palette: Palette
+    @Environment(\.lang) private var lang
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { ctx in
+            let t = ctx.date.timeIntervalSinceReferenceDate
+            let wave = sin(t * 3.2)
+            VStack(spacing: 8) {
+                Text(tr(.hintTitle, lang))
+                    .font(.monitor(13, weight: .bold))
+                    .foregroundStyle(palette.dim)
+                Canvas { gc, size in
+                    let body = CGRect(x: 8, y: 14, width: 54, height: 66)
+                    gc.stroke(Path(roundedRect: body, cornerRadius: 15), with: .color(palette.text), lineWidth: 2.5)
+                    // corona con estrias que se desplazan
+                    let knob = CGRect(x: body.maxX + 1, y: 34, width: 9, height: 26)
+                    gc.fill(Path(roundedRect: knob, cornerRadius: 3), with: .color(palette.trace))
+                    for i in 0..<5 {
+                        let y = knob.minY + 3 + CGFloat(i) * 5 + CGFloat(wave) * 2.5
+                        if y > knob.minY + 1, y < knob.maxY - 2 {
+                            gc.fill(Path(CGRect(x: knob.minX, y: y, width: knob.width, height: 1.2)), with: .color(.black.opacity(0.55)))
+                        }
+                    }
+                    // flechas
+                    let ax = knob.midX
+                    for (dir, base) in [(-1.0, 28.0), (1.0, 66.0)] {
+                        var a = Path()
+                        a.move(to: CGPoint(x: ax - 5, y: base + dir * 0))
+                        a.addLine(to: CGPoint(x: ax, y: base + dir * -5))
+                        a.addLine(to: CGPoint(x: ax + 5, y: base))
+                        let o = 0.4 + 0.6 * max(0, wave * dir * -1)
+                        gc.stroke(a, with: .color(palette.trace.opacity(o)), lineWidth: 2)
+                    }
+                    // pantalla con trazo
+                    var ecg = Path()
+                    ecg.move(to: CGPoint(x: 18, y: 50))
+                    for (x, y) in [(26.0, 50.0), (29.0, 36.0), (33.0, 62.0), (37.0, 50.0), (52.0, 50.0)] {
+                        ecg.addLine(to: CGPoint(x: x, y: y))
+                    }
+                    gc.stroke(ecg, with: .color(palette.trace), lineWidth: 1.8)
+                }
+                .frame(width: 84, height: 94)
+                Text(tr(.hintBody, lang))
+                    .font(.monitor(15, weight: .semibold))
+                    .foregroundStyle(palette.text)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 14)
+                Text(tr(.hintDismiss, lang))
+                    .font(.monitor(11, weight: .medium))
+                    .foregroundStyle(palette.dim)
+                    .opacity(0.5 + 0.5 * (sin(t * 2.4) + 1) / 2)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black.opacity(0.92))
+        }
+    }
+}

@@ -16,7 +16,8 @@ extension EnvironmentValues {
 }
 
 enum L {
-    case monitor, status, activity, settings
+    case monitor, face, status, activity, settings
+    case guide, show, on, off, hintTitle, hintBody, hintDismiss
     case condition, min, avg, max, rest
     case steps, km, kcal
     case color, language, liveHR, haptic, beep, sound, clock24, note
@@ -29,6 +30,7 @@ func tr(_ k: L, _ lang: Lang) -> String {
     let es = lang == .es
     switch k {
     case .monitor: return es ? "MONITOR" : "MONITOR"
+    case .face: return es ? "CARATULA" : "WATCH FACE"
     case .status: return es ? "ESTADO" : "STATUS"
     case .activity: return es ? "ACTIVIDAD" : "ACTIVITY"
     case .settings: return es ? "AJUSTES" : "SETTINGS"
@@ -50,6 +52,13 @@ func tr(_ k: L, _ lang: Lang) -> String {
     case .note: return es
         ? "El pulso en vivo abre una sesión de entrenamiento temporal que no se guarda en Salud. La onda es sintética y sigue tu pulso real; no es un electrocardiograma."
         : "Live heart rate opens a temporary workout session that is never saved to Health. The wave is synthetic and follows your real pulse; it is not an ECG."
+    case .guide: return es ? "Guía de la corona" : "Crown guide"
+    case .show: return es ? "VER" : "SHOW"
+    case .on: return "ON"
+    case .off: return "OFF"
+    case .hintTitle: return es ? "NAVEGACION" : "NAVIGATION"
+    case .hintBody: return es ? "Gira la corona digital para cambiar de pantalla" : "Turn the Digital Crown to switch screens"
+    case .hintDismiss: return es ? "TOCA PARA CONTINUAR" : "TAP TO CONTINUE"
     case .green: return es ? "VERDE" : "GREEN"
     case .cyan: return es ? "CIAN" : "CYAN"
     case .fine: return es ? "BIEN" : "FINE"
