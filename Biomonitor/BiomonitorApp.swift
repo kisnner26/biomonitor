@@ -49,7 +49,7 @@ struct RootView: View {
     @State private var toastToken = 0
 
     private let ticker = Timer.publish(every: 1.0 / 30.0, on: .main, in: .common).autoconnect()
-    private let lastPage = 4
+    private let lastPage = 5
 
     var body: some View {
         let palette = paletteID.palette
@@ -153,8 +153,8 @@ struct RootView: View {
             ActivityView(snapshot: vitals.snapshot, palette: palette)
         default:
             SettingsView(paletteID: $paletteID, lang: $lang, haptic: $haptic, beep: $beep, sound: $sound,
-                         live: $live, use24h: $use24h, palette: palette,
-                         onGuide: { withAnimation(.easeOut(duration: 0.3)) { showHint = true } })
+                         live: $live, use24h: $use24h, palette: palette, onGuide: { withAnimation(.easeOut(duration: 0.3)) { showHint = true } },
+                         section: p - 4)
         }
     }
 
@@ -164,7 +164,8 @@ struct RootView: View {
         case 1: tr(.face, lang)
         case 2: tr(.status, lang)
         case 3: tr(.activity, lang)
-        default: tr(.settings, lang)
+        case 4: tr(.settings, lang)
+        default: tr(.settings2, lang)
         }
     }
 

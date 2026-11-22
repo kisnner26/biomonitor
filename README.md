@@ -13,7 +13,7 @@ Monitor de pulso para Apple Watch inspirado en el reloj que usa Ethan Winters en
 - **Actividad.** Pasos, distancia y energía activa con barras segmentadas hacia una meta.
 - **Ajustes.** Paleta verde (marco punteado) o cian (barras azules como la pantalla del genoma), pulso en vivo, latido táctil (lub-dub) y reloj de 24 h.
 - **Animaciones.** Secuencia de arranque, marco que se dibuja solo, corazón que late con el pico R del ECG, estela de fósforo en el trazo, líneas de barrido tipo CRT, interferencia al cambiar de página y marco de estado que late más rápido en CAUTION y DANGER, con háptico al cambiar de estado.
-- **Navegación con la corona.** Cinco pantallas (monitor, carátula, estado, actividad, ajustes) y sin indicadores en pantalla: se navega girando la Digital Crown o deslizando a los lados. La primera vez aparece una guía; se puede volver a ver en Ajustes. Al cambiar de pantalla se muestra un instante su nombre.
+- **Navegación con la corona.** Seis pantallas (monitor, carátula, estado, actividad y dos de ajustes) y sin indicadores en pantalla: se navega girando la Digital Crown o deslizando a los lados. La primera vez aparece una guía; se puede volver a ver en Ajustes. Al cambiar de pantalla se muestra un instante su nombre.
 - **Carátula y complicación.** Una pantalla de carátula con la hora enorme, y una complicación (circular, rectangular, esquina y en línea) para añadir a cualquier esfera. Apple no permite que apps de terceros creen esferas propias; la complicación es la vía oficial.
 - **Idioma.** Español e inglés, elegible en Ajustes (por defecto el del sistema).
 - **Sonido.** Tonos sintetizados al vuelo (arranque, páginas, alertas de estado y bip opcional con cada latido), sin archivos de audio.

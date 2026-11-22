@@ -13,33 +13,40 @@ struct SettingsView: View {
     let palette: Palette
     var onGuide: () -> Void = {}
 
+    /// 0 = apariencia, 1 = pulso y sonido. sin scroll: asi la corona sigue navegando entre pantallas.
+    var section = 0
+
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
+            if section == 0 {
                 row(tr(.color, lang), paletteID.title(lang), true) {
                     paletteID = paletteID == .fitbit ? .codex : .fitbit
                 }
                 row(tr(.language, lang), lang.title, true) {
                     lang = lang == .es ? .en : .es
                 }
+                toggle(tr(.clock24, lang), $use24h)
+                row(tr(.guide, lang), tr(.show, lang), true, action: onGuide)
+                Spacer(minLength: 0)
+                Text("BIOMONITOR 1.0")
+                    .font(.monitor(11, weight: .medium))
+                    .foregroundStyle(palette.dim.opacity(0.7))
+                    .padding(.bottom, 6)
+            } else {
                 toggle(tr(.liveHR, lang), $live)
                 toggle(tr(.haptic, lang), $haptic)
                 toggle(tr(.beep, lang), $beep)
                 toggle(tr(.sound, lang), $sound)
-                toggle(tr(.clock24, lang), $use24h)
-                row(tr(.guide, lang), tr(.show, lang), true, action: onGuide)
-
                 Text(tr(.note, lang))
-                    .font(.system(size: 11))
+                    .font(.system(size: 10))
                     .foregroundStyle(palette.dim)
-                    .padding(.vertical, 8)
-                Text("BIOMONITOR 1.0")
-                    .font(.monitor(11, weight: .medium))
-                    .foregroundStyle(palette.dim.opacity(0.7))
-                    .padding(.bottom, 10)
+                    .lineLimit(5)
+                    .minimumScaleFactor(0.8)
+                    .padding(.top, 6)
+                Spacer(minLength: 0)
             }
-            .padding(.horizontal, 8)
         }
+        .padding(.horizontal, 8)
     }
 
     private func toggle(_ label: String, _ b: Binding<Bool>) -> some View {

@@ -16,7 +16,7 @@ extension EnvironmentValues {
 }
 
 enum L {
-    case monitor, face, status, activity, settings
+    case monitor, face, status, activity, settings, settings2
     case guide, show, on, off, hintTitle, hintBody, hintDismiss
     case condition, min, avg, max, rest
     case steps, km, kcal
@@ -30,6 +30,7 @@ func tr(_ k: L, _ lang: Lang) -> String {
     let es = lang == .es
     switch k {
     case .monitor: return es ? "MONITOR" : "MONITOR"
+    case .settings2: return es ? "PULSO Y SONIDO" : "PULSE & SOUND"
     case .face: return es ? "CARATULA" : "WATCH FACE"
     case .status: return es ? "ESTADO" : "STATUS"
     case .activity: return es ? "ACTIVIDAD" : "ACTIVITY"
