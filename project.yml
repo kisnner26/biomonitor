@@ -1,0 +1,43 @@
+name: Biomonitor
+options:
+  bundleIdPrefix: com.kisnner26
+  developmentLanguage: es
+  createIntermediateGroups: true
+  deploymentTarget:
+    watchOS: "10.0"
+targets:
+  Biomonitor:
+    type: application
+    platform: watchOS
+    sources:
+      - Biomonitor
+    entitlements:
+      path: Biomonitor/Biomonitor.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+    info:
+      path: Biomonitor/Info.plist
+      properties:
+        CFBundleDisplayName: Biomonitor
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        WKApplication: true
+        WKWatchOnly: true
+        WKBackgroundModes:
+          - workout-processing
+        NSHealthShareUsageDescription: "Biomonitor lee tu pulso, pasos, distancia y energia para mostrarlos en el monitor."
+        NSHealthUpdateUsageDescription: "Biomonitor abre una sesion de entrenamiento temporal para leer el pulso en vivo. No guarda nada en Salud."
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kisnner26.biomonitor
+        SWIFT_VERSION: "5.0"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_STYLE: Automatic
+schemes:
+  Biomonitor:
+    build:
+      targets:
+        Biomonitor: all
