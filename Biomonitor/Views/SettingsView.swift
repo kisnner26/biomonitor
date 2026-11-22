@@ -2,7 +2,10 @@ import SwiftUI
 
 struct SettingsView: View {
     @Binding var paletteID: PaletteID
+    @Binding var lang: Lang
     @Binding var haptic: Bool
+    @Binding var beep: Bool
+    @Binding var sound: Bool
     @Binding var live: Bool
     @Binding var use24h: Bool
     let palette: Palette
@@ -10,23 +13,29 @@ struct SettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
-                Text("AJUSTES")
-                    .font(.monitor(12, weight: .medium))
-                    .foregroundStyle(palette.dim)
-
-                Picker("Color", selection: $paletteID) {
-                    ForEach(PaletteID.allCases) { Text($0.title).tag($0) }
+                Picker(tr(.color, lang), selection: $paletteID) {
+                    ForEach(PaletteID.allCases) { Text($0.title(lang)).tag($0) }
                 }
                 .pickerStyle(.navigationLink)
 
-                Toggle("Pulso en vivo", isOn: $live)
-                Toggle("Latido tactil", isOn: $haptic)
-                Toggle("Reloj 24 h", isOn: $use24h)
+                Picker(tr(.language, lang), selection: $lang) {
+                    ForEach(Lang.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.navigationLink)
 
-                Text("El pulso en vivo abre una sesion de entrenamiento temporal que no se guarda en Salud. La onda es sintetica y sigue tu pulso real; no es un electrocardiograma.")
+                Toggle(tr(.liveHR, lang), isOn: $live)
+                Toggle(tr(.haptic, lang), isOn: $haptic)
+                Toggle(tr(.beep, lang), isOn: $beep)
+                Toggle(tr(.sound, lang), isOn: $sound)
+                Toggle(tr(.clock24, lang), isOn: $use24h)
+
+                Text(tr(.note, lang))
                     .font(.system(size: 11))
                     .foregroundStyle(palette.dim)
                     .padding(.top, 4)
+                Text("BIOMONITOR 1.0")
+                    .font(.monitor(11, weight: .medium))
+                    .foregroundStyle(palette.dim.opacity(0.7))
             }
             .tint(palette.trace)
             .padding(.horizontal, 6)

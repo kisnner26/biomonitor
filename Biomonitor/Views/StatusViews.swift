@@ -1,11 +1,13 @@
 import SwiftUI
 
-/// estado de salud: fine, caution o danger. el marco y el texto laten segun la gravedad.
+/// estado de salud al estilo de la saga: el marco y el texto laten segun la gravedad,
+/// y el reloj recomienda el objeto de curacion correspondiente
 struct StatusView: View {
     let snapshot: VitalsSnapshot
     let palette: Palette
     let engine: ECGEngine
     var paused = false
+    @Environment(\.lang) private var lang
 
     var body: some View {
         let cond = Condition(bpm: snapshot.bpm)
@@ -21,47 +23,69 @@ struct StatusView: View {
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
             }
-            VStack(spacing: 4) {
-                Text("CONDITION")
+            VStack(spacing: 3) {
+                Text(tr(.condition, lang))
                     .font(.monitor(12, weight: .medium))
                     .foregroundStyle(palette.dim)
                 TimelineView(.animation(minimumInterval: 1.0 / 20.0, paused: paused || cond != .danger)) { ctx in
                     let blink = cond == .danger && !paused ? (sin(ctx.date.timeIntervalSinceReferenceDate * 9) > -0.2 ? 1.0 : 0.35) : 1.0
-                    Text(cond.label)
-                        .font(.monitor(34, weight: .bold))
+                    Text(cond.label(lang))
+                        .font(.monitor(32, weight: .bold))
                         .foregroundStyle(cond.color)
                         .shadow(color: cond.color.opacity(0.7), radius: 7)
-                        .minimumScaleFactor(0.6)
+                        .minimumScaleFactor(0.5)
                         .lineLimit(1)
                         .opacity(blink)
                 }
-                .id(cond.label)
+                .id(cond.label(lang))
                 .transition(.scale(scale: 1.35).combined(with: .opacity))
                 ECGTraceView(engine: engine, bpm: snapshot.bpm, color: cond.color, paused: paused)
-                    .frame(height: 54)
+                    .frame(height: 46)
                 HStack(spacing: 14) {
-                    stat("MIN", snapshot.minHR)
-                    stat("PROM", snapshot.avgHR)
-                    stat("MAX", snapshot.maxHR)
+                    stat(tr(.min, lang), snapshot.minHR)
+                    stat(tr(.avg, lang), snapshot.avgHR)
+                    stat(tr(.max, lang), snapshot.maxHR)
                 }
                 HStack(spacing: 4) {
-                    Text("REPOSO")
+                    Text(tr(.rest, lang))
                         .font(.monitor(11, weight: .medium))
                         .foregroundStyle(palette.dim)
                     Text(snapshot.restingHR.map(String.init) ?? "--")
                         .font(.monitor(15, weight: .semibold))
                         .foregroundStyle(palette.text)
                 }
+                tip(cond)
+                    .padding(.top, 2)
             }
             .padding(.horizontal, 8)
-            .animation(.spring(response: 0.4, dampingFraction: 0.65), value: cond.label)
+            .animation(.spring(response: 0.4, dampingFraction: 0.65), value: cond)
         }
+    }
+
+    @ViewBuilder private func tip(_ cond: Condition) -> some View {
+        HStack(spacing: 5) {
+            switch cond {
+            case .fine:
+                Text(tr(.tipStable, lang)).foregroundStyle(cond.color)
+            case .caution:
+                PixelIcon(rows: PixelIcon.herb, color: cond.color, pixel: 1.8)
+                Text(tr(.tipHerb, lang)).foregroundStyle(cond.color)
+            case .danger:
+                PixelIcon(rows: PixelIcon.cross, color: cond.color, pixel: 1.8)
+                Text(tr(.tipAid, lang)).foregroundStyle(cond.color)
+            case .noSignal:
+                Text(tr(.tipNoSignal, lang)).foregroundStyle(palette.dim)
+            }
+        }
+        .font(.monitor(12, weight: .semibold))
+        .id(cond)
+        .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 
     private func stat(_ title: String, _ v: Int?) -> some View {
         VStack(spacing: 0) {
             Text(v.map(String.init) ?? "--")
-                .font(.monitor(22, weight: .medium))
+                .font(.monitor(21, weight: .medium))
                 .foregroundStyle(palette.text)
                 .contentTransition(.numericText())
                 .animation(.snappy, value: v)
@@ -77,12 +101,13 @@ struct ActivityView: View {
     let snapshot: VitalsSnapshot
     let palette: Palette
     @State private var shown = false
+    @Environment(\.lang) private var lang
 
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
-            row(PixelIcon.steps, String(snapshot.steps), "PASOS", Double(snapshot.steps) / 10_000, 0)
-            row(PixelIcon.route, String(format: "%.2f", snapshot.distanceKm), "KM", snapshot.distanceKm / 8, 1)
-            row(PixelIcon.flame, String(snapshot.kcal), "KCAL", Double(snapshot.kcal) / 500, 2)
+            row(PixelIcon.steps, String(snapshot.steps), tr(.steps, lang), Double(snapshot.steps) / 10_000, 0)
+            row(PixelIcon.route, String(format: "%.2f", snapshot.distanceKm), tr(.km, lang), snapshot.distanceKm / 8, 1)
+            row(PixelIcon.flame, String(snapshot.kcal), tr(.kcal, lang), Double(snapshot.kcal) / 500, 2)
         }
         .padding(.horizontal, 10)
         .onAppear { shown = true }

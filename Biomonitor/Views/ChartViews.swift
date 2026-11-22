@@ -11,7 +11,7 @@ struct ECGTraceView: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: paused)) { ctx in
             Canvas { gc, size in
-                if !paused { engine.advance(to: ctx.date, bpm: bpm) }
+                _ = ctx.date   // fuerza el redibujo; el motor avanza en RootView
                 let base = size.height * 0.66
                 let amp = size.height * 0.58
                 let n = engine.columns
