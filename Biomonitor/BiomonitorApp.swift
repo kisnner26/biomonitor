@@ -11,12 +11,13 @@ struct BiomonitorApp: App {
     @AppStorage("sound") private var sound = true
     @AppStorage("live") private var live = true
     @AppStorage("use24h") private var use24h = false
+    @AppStorage("seenCrownHint") private var seenHint = false
     @Environment(\.scenePhase) private var phase
 
     var body: some Scene {
         WindowGroup {
             RootView(vitals: vitals, paletteID: $paletteID, lang: $lang, haptic: $haptic, beep: $beep,
-                     sound: $sound, live: $live, use24h: $use24h)
+                     sound: $sound, live: $live, use24h: $use24h, seenHint: $seenHint)
                 .environment(\.lang, lang)
                 .onAppear { vitals.start(live: live) }
                 .onChange(of: live) { _, new in vitals.setLive(new) }
@@ -34,6 +35,7 @@ struct RootView: View {
     @Binding var sound: Bool
     @Binding var live: Bool
     @Binding var use24h: Bool
+    @Binding var seenHint: Bool
     @Environment(\.isLuminanceReduced) private var dimmed
 
     @State private var engine = ECGEngine()
@@ -42,33 +44,33 @@ struct RootView: View {
     @State private var crown = 0.0
     @State private var booted = false
     @State private var seenBeats = 0
+    @State private var showHint = false
+    @State private var toastVisible = false
+    @State private var toastToken = 0
 
     private let ticker = Timer.publish(every: 1.0 / 30.0, on: .main, in: .common).autoconnect()
-    private let lastPage = 3
+    private let lastPage = 4
 
     var body: some View {
         let palette = paletteID.palette
         let cond = Condition(bpm: vitals.snapshot.bpm)
         ZStack {
-            VStack(spacing: 0) {
-                NavBar(page: page, palette: palette)
-                TimelineView(.periodic(from: .now, by: 1)) { ctx in
-                    ZStack {
-                        pageView(page, palette: palette, now: ctx.date)
-                            .id(page)
-                            .transition(.asymmetric(
-                                insertion: .move(edge: direction > 0 ? .trailing : .leading).combined(with: .opacity),
-                                removal: .move(edge: direction > 0 ? .leading : .trailing).combined(with: .opacity)))
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped()
+            TimelineView(.periodic(from: .now, by: 1)) { ctx in
+                ZStack {
+                    pageView(page, palette: palette, now: ctx.date)
+                        .id(page)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: direction > 0 ? .trailing : .leading).combined(with: .opacity),
+                            removal: .move(edge: direction > 0 ? .leading : .trailing).combined(with: .opacity)))
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
             }
             .gesture(DragGesture(minimumDistance: 24).onEnded { v in
                 guard abs(v.translation.width) > abs(v.translation.height), abs(v.translation.width) > 36 else { return }
                 go(v.translation.width < 0 ? page + 1 : page - 1)
             })
-            .focusable(page != lastPage)
+            .focusable()
             .digitalCrownRotation($crown, from: 0, through: Double(lastPage), by: 1, sensitivity: .low,
                                   isContinuous: false, isHapticFeedbackEnabled: true)
             .onChange(of: crown) { _, v in
@@ -76,9 +78,20 @@ struct RootView: View {
                 if target != page { go(target, fromCrown: true) }
             }
 
+            VStack {
+                PageToast(text: pageTitle(page), color: palette.trace, visible: toastVisible && !showHint)
+                    .padding(.top, 2)
+                Spacer()
+            }
+
             if !dimmed {
                 ScanlineOverlay()
                 GlitchOverlay(trigger: page, color: palette.trace)
+            }
+            if showHint && booted {
+                CrownHint(palette: palette)
+                    .transition(.opacity)
+                    .onTapGesture { dismissHint() }
             }
             if !booted && !dimmed {
                 BootView(palette: palette)
@@ -95,6 +108,11 @@ struct RootView: View {
             SoundFX.shared.play(.boot)
             try? await Task.sleep(nanoseconds: 2_400_000_000)
             withAnimation(.easeIn(duration: 0.35)) { booted = true }
+            if !seenHint {
+                withAnimation(.easeOut(duration: 0.4)) { showHint = true }
+                try? await Task.sleep(nanoseconds: 7_000_000_000)
+                if showHint { dismissHint() }
+            }
         }
         .onReceive(ticker) { date in
             guard !dimmed else { return }
@@ -128,12 +146,39 @@ struct RootView: View {
             MonitorView(snapshot: vitals.snapshot, palette: palette, engine: engine, now: now, use24h: use24h, dimmed: dimmed,
                         onTap: { WKInterfaceDevice.current().play(.click); SoundFX.shared.play(.tap) })
         case 1:
-            StatusView(snapshot: vitals.snapshot, palette: palette, engine: engine, paused: dimmed)
+            FaceView(snapshot: vitals.snapshot, palette: palette, engine: engine, now: now, use24h: use24h, dimmed: dimmed)
         case 2:
+            StatusView(snapshot: vitals.snapshot, palette: palette, engine: engine, paused: dimmed)
+        case 3:
             ActivityView(snapshot: vitals.snapshot, palette: palette)
         default:
             SettingsView(paletteID: $paletteID, lang: $lang, haptic: $haptic, beep: $beep, sound: $sound,
-                         live: $live, use24h: $use24h, palette: palette)
+                         live: $live, use24h: $use24h, palette: palette,
+                         onGuide: { withAnimation(.easeOut(duration: 0.3)) { showHint = true } })
+        }
+    }
+
+    private func pageTitle(_ p: Int) -> String {
+        switch p {
+        case 0: tr(.monitor, lang)
+        case 1: tr(.face, lang)
+        case 2: tr(.status, lang)
+        case 3: tr(.activity, lang)
+        default: tr(.settings, lang)
+        }
+    }
+
+    private func dismissHint() {
+        withAnimation(.easeIn(duration: 0.3)) { showHint = false }
+        seenHint = true
+    }
+
+    private func flashToast() {
+        toastToken += 1
+        let token = toastToken
+        toastVisible = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) {
+            if token == toastToken { toastVisible = false }
         }
     }
 
@@ -143,6 +188,8 @@ struct RootView: View {
         direction = t > page ? 1 : -1
         withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) { page = t }
         crown = Double(t)
+        if showHint { dismissHint() }
+        flashToast()
         SoundFX.shared.play(.page)
         if !fromCrown { WKInterfaceDevice.current().play(.click) }
     }
