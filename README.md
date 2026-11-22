@@ -9,7 +9,8 @@ Monitor de pulso para Apple Watch inspirado en el reloj que usa Ethan Winters en
 - **Monitor.** Fecha y hora, trazo de ECG en marco punteado, pulso con barras de zona y pasos. Tocar la gráfica alterna entre el ECG y el historial de pulso en escalones.
 - **Condition.** Estado FINE, CAUTION o DANGER según el pulso, con mínimo, promedio, máximo y pulso en reposo del día.
 - **Actividad.** Pasos, distancia y energía activa con barras segmentadas hacia una meta.
-- **Ajustes.** Paleta verde o cian, pulso en vivo, latido táctil (lub-dub) y reloj de 24 h.
+- **Ajustes.** Paleta verde (marco punteado) o cian (barras azules como la pantalla del genoma), pulso en vivo, latido táctil (lub-dub) y reloj de 24 h.
+- **Animaciones.** Secuencia de arranque, marco que se dibuja solo, corazón que late con el pico R del ECG, estela de fósforo en el trazo, líneas de barrido tipo CRT, interferencia al cambiar de página y marco de estado que late más rápido en CAUTION y DANGER, con háptico al cambiar de estado.
 - **Siempre activa.** Con la pantalla atenuada el trazo se congela y baja el brillo.
 
 ## Cómo funciona
