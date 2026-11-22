@@ -11,13 +11,14 @@ struct BiomonitorApp: App {
     @AppStorage("sound") private var sound = true
     @AppStorage("live") private var live = true
     @AppStorage("use24h") private var use24h = false
+    @AppStorage("doubleTap") private var doubleTap = true
     @AppStorage("seenCrownHint") private var seenHint = false
     @Environment(\.scenePhase) private var phase
 
     var body: some Scene {
         WindowGroup {
             RootView(vitals: vitals, paletteID: $paletteID, lang: $lang, haptic: $haptic, beep: $beep,
-                     sound: $sound, live: $live, use24h: $use24h, seenHint: $seenHint)
+                     sound: $sound, live: $live, use24h: $use24h, doubleTap: $doubleTap, seenHint: $seenHint)
                 .environment(\.lang, lang)
                 .onAppear { vitals.start(live: live) }
                 .onChange(of: live) { _, new in vitals.setLive(new) }
@@ -35,6 +36,7 @@ struct RootView: View {
     @Binding var sound: Bool
     @Binding var live: Bool
     @Binding var use24h: Bool
+    @Binding var doubleTap: Bool
     @Binding var seenHint: Bool
     @Environment(\.isLuminanceReduced) private var dimmed
 
@@ -49,7 +51,7 @@ struct RootView: View {
     @State private var toastToken = 0
 
     private let ticker = Timer.publish(every: 1.0 / 30.0, on: .main, in: .common).autoconnect()
-    private let lastPage = 5
+    private let lastPage = 4
 
     var body: some View {
         let palette = paletteID.palette
@@ -77,6 +79,8 @@ struct RootView: View {
                 let target = Int(v.rounded())
                 if target != page { go(target, fromCrown: true) }
             }
+
+            if doubleTap { doubleTapButton }
 
             VStack {
                 PageToast(text: pageTitle(page), color: palette.trace, visible: toastVisible && !showHint)
@@ -153,8 +157,21 @@ struct RootView: View {
             ActivityView(snapshot: vitals.snapshot, palette: palette)
         default:
             SettingsView(paletteID: $paletteID, lang: $lang, haptic: $haptic, beep: $beep, sound: $sound,
-                         live: $live, use24h: $use24h, palette: palette, onGuide: { withAnimation(.easeOut(duration: 0.3)) { showHint = true } },
-                         section: p - 4)
+                         live: $live, use24h: $use24h, doubleTap: $doubleTap, palette: palette, onGuide: { withAnimation(.easeOut(duration: 0.3)) { showHint = true } })
+        }
+    }
+
+    /// doble toque (apple watch ultra 2, series 9 y posteriores): pasa a la siguiente pantalla con la mano del reloj
+    @ViewBuilder private var doubleTapButton: some View {
+        if #available(watchOS 11.0, *) {
+            Button {
+                go(page >= lastPage ? 0 : page + 1, forward: true)
+            } label: { Color.clear }
+            .buttonStyle(.plain)
+            .handGestureShortcut(.primaryAction)
+            .frame(width: 2, height: 2)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .accessibilityHidden(true)
         }
     }
 
@@ -164,8 +181,7 @@ struct RootView: View {
         case 1: tr(.face, lang)
         case 2: tr(.status, lang)
         case 3: tr(.activity, lang)
-        case 4: tr(.settings, lang)
-        default: tr(.settings2, lang)
+        default: tr(.settings, lang)
         }
     }
 
@@ -183,10 +199,10 @@ struct RootView: View {
         }
     }
 
-    private func go(_ target: Int, fromCrown: Bool = false) {
+    private func go(_ target: Int, fromCrown: Bool = false, forward: Bool? = nil) {
         let t = min(max(target, 0), lastPage)
         guard t != page else { return }
-        direction = t > page ? 1 : -1
+        direction = (forward ?? (t > page)) ? 1 : -1
         withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) { page = t }
         crown = Double(t)
         if showHint { dismissHint() }

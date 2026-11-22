@@ -10,73 +10,65 @@ struct SettingsView: View {
     @Binding var sound: Bool
     @Binding var live: Bool
     @Binding var use24h: Bool
+    @Binding var doubleTap: Bool
     let palette: Palette
     var onGuide: () -> Void = {}
 
-    /// 0 = apariencia, 1 = pulso y sonido. sin scroll: asi la corona sigue navegando entre pantallas.
-    var section = 0
-
+    /// una sola pantalla de fichas, sin scroll: asi la corona sigue navegando entre pantallas.
     var body: some View {
-        VStack(spacing: 0) {
-            if section == 0 {
-                row(tr(.color, lang), paletteID.title(lang), true) {
-                    paletteID = paletteID == .fitbit ? .codex : .fitbit
-                }
-                row(tr(.language, lang), lang.title, true) {
-                    lang = lang == .es ? .en : .es
-                }
-                toggle(tr(.clock24, lang), $use24h)
-                row(tr(.guide, lang), tr(.show, lang), true, action: onGuide)
-                Spacer(minLength: 0)
-                Text("BIOMONITOR 1.0")
-                    .font(.monitor(11, weight: .medium))
-                    .foregroundStyle(palette.dim.opacity(0.7))
-                    .padding(.bottom, 6)
-            } else {
-                toggle(tr(.liveHR, lang), $live)
-                toggle(tr(.haptic, lang), $haptic)
-                toggle(tr(.beep, lang), $beep)
-                toggle(tr(.sound, lang), $sound)
-                Text(tr(.note, lang))
-                    .font(.system(size: 10))
-                    .foregroundStyle(palette.dim)
-                    .lineLimit(5)
-                    .minimumScaleFactor(0.8)
-                    .padding(.top, 6)
-                Spacer(minLength: 0)
+        VStack(spacing: 6) {
+            HStack(spacing: 6) {
+                tile(tr(.color, lang), paletteID.title(lang), true) { paletteID = paletteID == .fitbit ? .codex : .fitbit }
+                tile(tr(.language, lang), lang.title, true) { lang = lang == .es ? .en : .es }
+            }
+            HStack(spacing: 6) {
+                switchTile(tr(.liveHR, lang), $live)
+                switchTile(tr(.sound, lang), $sound)
+            }
+            HStack(spacing: 6) {
+                switchTile(tr(.haptic, lang), $haptic)
+                switchTile(tr(.beep, lang), $beep)
+            }
+            HStack(spacing: 6) {
+                switchTile(tr(.clock24, lang), $use24h)
+                switchTile(tr(.doubleTap, lang), $doubleTap)
+            }
+            HStack(spacing: 6) {
+                tile(tr(.guide, lang), tr(.show, lang), true, action: onGuide)
+                tile(tr(.info, lang), "1.0", false) {}
             }
         }
         .padding(.horizontal, 8)
+        .padding(.bottom, 4)
     }
 
-    private func toggle(_ label: String, _ b: Binding<Bool>) -> some View {
-        row(label, b.wrappedValue ? tr(.on, lang) : tr(.off, lang), b.wrappedValue) { b.wrappedValue.toggle() }
+    private func switchTile(_ label: String, _ b: Binding<Bool>) -> some View {
+        tile(label, b.wrappedValue ? tr(.on, lang) : tr(.off, lang), b.wrappedValue) { b.wrappedValue.toggle() }
     }
 
-    private func row(_ label: String, _ value: String, _ active: Bool, action: @escaping () -> Void) -> some View {
+    private func tile(_ label: String, _ value: String, _ active: Bool, action: @escaping () -> Void) -> some View {
         Button {
             action()
             SoundFX.shared.play(.tap)
             WKInterfaceDevice.current().play(.click)
         } label: {
-            VStack(spacing: 0) {
-                HStack {
-                    Text(label)
-                        .font(.monitor(16, weight: .medium))
-                        .foregroundStyle(palette.text)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                    Spacer(minLength: 6)
-                    Text(value)
-                        .font(.monitor(14, weight: .bold))
-                        .foregroundStyle(active ? palette.trace : palette.dim)
-                        .padding(.horizontal, 6).padding(.vertical, 2)
-                        .overlay(Rectangle().stroke(active ? palette.trace.opacity(0.8) : palette.dim.opacity(0.5), lineWidth: 1))
-                        .contentTransition(.identity)
-                }
-                .padding(.vertical, 8)
-                Rectangle().fill(palette.frame.opacity(0.25)).frame(height: 1)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(label)
+                    .font(.monitor(12, weight: .medium))
+                    .foregroundStyle(palette.dim)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                Text(value)
+                    .font(.monitor(17, weight: .bold))
+                    .foregroundStyle(active ? palette.trace : palette.dim)
+                    .shadow(color: active ? palette.trace.opacity(0.6) : .clear, radius: 4)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
             }
+            .padding(.horizontal, 7)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .background(palette.dim.opacity(0.12))
+            .overlay(Rectangle().stroke(active ? palette.trace.opacity(0.7) : palette.dim.opacity(0.35), lineWidth: 1))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

@@ -16,7 +16,8 @@ extension EnvironmentValues {
 }
 
 enum L {
-    case monitor, face, status, activity, settings, settings2
+    case monitor, face, status, activity, settings
+    case doubleTap, info
     case guide, show, on, off, hintTitle, hintBody, hintDismiss
     case condition, min, avg, max, rest
     case steps, km, kcal
@@ -30,7 +31,8 @@ func tr(_ k: L, _ lang: Lang) -> String {
     let es = lang == .es
     switch k {
     case .monitor: return es ? "MONITOR" : "MONITOR"
-    case .settings2: return es ? "PULSO Y SONIDO" : "PULSE & SOUND"
+    case .doubleTap: return es ? "Doble toque" : "Double tap"
+    case .info: return es ? "Versión" : "Version"
     case .face: return es ? "CARATULA" : "WATCH FACE"
     case .status: return es ? "ESTADO" : "STATUS"
     case .activity: return es ? "ACTIVIDAD" : "ACTIVITY"
@@ -58,7 +60,7 @@ func tr(_ k: L, _ lang: Lang) -> String {
     case .on: return "ON"
     case .off: return "OFF"
     case .hintTitle: return es ? "NAVEGACION" : "NAVIGATION"
-    case .hintBody: return es ? "Gira la corona digital para cambiar de pantalla" : "Turn the Digital Crown to switch screens"
+    case .hintBody: return es ? "Gira la corona o haz doble toque para cambiar de pantalla" : "Turn the Crown or double tap to switch screens"
     case .hintDismiss: return es ? "TOCA PARA CONTINUAR" : "TAP TO CONTINUE"
     case .green: return es ? "VERDE" : "GREEN"
     case .cyan: return es ? "CIAN" : "CYAN"
